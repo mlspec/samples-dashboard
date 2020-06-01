@@ -1,0 +1,5 @@
+[graphdb_testing]
+endpoint = "wss://gha-and-aml-test.gremlin.cosmos.azure.com:443/"
+primaryKey = "aQm9Q6rnB7p7d5YYS42sh1cQXUBiZw6bQDgw2mnQSQ23AVI83VXzIANHOdp0bSGCXDuuIdAolH8rrCiZn40HMw=="
+database = "metadata_store"
+collection = "workflows_testing"
