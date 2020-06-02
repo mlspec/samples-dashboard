@@ -13,8 +13,20 @@
             "breakOnLoad": true,
             "sourceMaps": true,
             "sourceMapPathOverrides": {
-                "*": "${webRoot}/*"
+                "/./*": "${webRoot}/*",
+                "/src/*": "${webRoot}/*",
+                "/*": "*",
+                "/./~/*": "${webRoot}/node_modules/*"
             }
         },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch load data",
+            "program": "${workspaceFolder}/src/loadData.js",
+            "skipFiles": [
+                "<node_internals>/**"
+            ]
+        }
     ]
 }

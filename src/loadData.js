@@ -2,7 +2,13 @@ import namor from 'namor'
 
 // For Loading From Database
 import toml from 'toml';
-import Gremlin from 'gremlin';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+// var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
+// var xhr = new XMLHttpRequest();
+import GremlinHelper from './gremlinhelper.js';
+import browserify from 'browserify';
+
 // import * as RNFS from 'react-native-fs';
 // Uses a read-only key
 var config_full = toml.parse(`[graphdb_testing]
@@ -11,13 +17,6 @@ primaryKey = "UGgIOr2sEoli6sh0JrMKe1nw4Csuf5sY61ujoEwnuz50Q3D5FrroGnpQfsgo2s37Bs
 database = "metadata_store"
 collection = "workflows_testing"
 `)
-// readFile(filepath: string, encoding?: string)
-// RNFS.readFile('./config.toml', 'utf-8').then(res => {
-//     config_full = toml.parse(res);
-// })
-// .catch(err => {
-//     console.log(err.message, err.code);
-// });
 
 const config = config_full.graphdb_testing
 const range = len => {
@@ -51,6 +50,21 @@ const newWorkflow = (id_value) => {
   };
 }
 
+function loadJSON(jsonfile, callback) {   
+
+  // var xobj = new XMLHttpRequest();
+  // var xobj = new xhr();
+  // xobj.overrideMimeType("application/json");
+  // xobj.open('GET', jsonfile, true); // Replace 'my_data' with the path to your file
+  // xobj.onreadystatechange = function () {
+  //       if (xobj.readyState == 4 && xobj.status == "200") {
+  //         // Required use of an anonymous callback as .open will NOT return a value but simply returns undefined in asynchronous mode
+  //         callback(xobj.responseText);
+  //       }
+  // };
+  // xobj.send(null);  
+}
+
 export default function makeData(...lens) {
   const makeDataLevel = (depth = 0) => {
     const len = lens[depth]
@@ -61,71 +75,48 @@ export default function makeData(...lens) {
       }
     })
   }
-  var wfd = new WorkflowData();
-  var allData = wfd.get_all_objects();
 
-  return makeDataLevel()
+  const loadDataLevel = (depth = 0) => {
+    const len = lens[depth]
+    return range(len).map(d => {
+      return {
+        ...newPerson(),
+        subRows: lens[depth + 1] ? makeDataLevel(depth + 1) : undefined,
+      }
+    })
+  }
+
+
+  loadJSON(function(response) {
+    // Parse JSON string into object
+      var actual_JSON = JSON.parse(response);
+   });
+
+  var db_mock = require('./db.json')
+
+  console.log('Length: ' + db_mock)
+
+  let obj = db_mock[0]
+  return makeDataLevel();
 }
+
 
 
 export class WorkflowData {
-
   constructor() {
-    var authenticator = new Gremlin.driver.auth.PlainTextSaslAuthenticator(`/dbs/${config.database}/colls/${config.collection}`, config.primaryKey);
-    this.gremlin_config_options = {
-      authenticator,
-      traversalsource: "g",
-      rejectUnauthorized: true,
-      mimeType: "application/vnd.gremlin-v2.0+json"
-    }
-
-    // this.client = new Gremlin.driver.Client(
-    //     config.endpoint,
-    //     this.gremlin_config_options
-    // );
-    // const gremlin = require('gremlin');
-    var DriverRemoteConnection = Gremlin.driver.DriverRemoteConnection;
-    this.Graph = Gremlin.structure.Graph;
-
-    this.gremlin_websocket = new WebSocket('wss://gha-and-aml-test.gremlin.cosmos.azure.com:8182/gremlin')
-
-    // var dc = new DriverRemoteConnection(this.gremlin_websocket,this.gremlin_config_options);
-
-    this.graph = new this.Graph();
-    this.g = this.graph.traversal().withRemote(this.gremlin_websocket);
-  };
-
-
-  executeAsyncQuery = function (client, q) {
-    return new Promise(function (resolve) {
-      console.log(`Running ${q}`);
-      client.open = () => resolve(client.send(q, {}));
-    });
-  };
-
-  get_all_objects = function () {
-    // this.executeAsyncQuery("g.V()");
-    return this.executeAsyncQuery(this.gremlin_websocket, "g.V()");
-  };
-
-  foo = async function () {
-    this.client.open();
-    var result = await this.executeAsyncQuery(this.client, "g.V()");
-    console.log('Woo done!', result);
-    this.client.close();
-    // But the best part is, we can just keep awaiting different stuff, without ugly .then()s
-    // var somethingElse = await getSomethingElse()
-    // var moreThings = await getMoreThings()
+    this._gh = new GremlinHelper();
   }
 
-  // (async function () {
-  //     client.open();
-  //     var result = await executeAsyncQuery(q);
-  //     console.log('Woo done!', result);
-
-  //     // But the best part is, we can just keep awaiting different stuff, without ugly .then()s
-  //     // var somethingElse = await getSomethingElse()
-  //     // var moreThings = await getMoreThings()
-  // })()
+  execute_query(query) {
+    return this._gh.execute_query(query)
+  }
 
 }
+
+makeData();
+
+// var wfd = new WorkflowData();
+// var results = null;
+// var bauoe = wfd.execute_query("g.V('package|999999999999.9.4678|aefd467b-35a7-4a4c-9295-1ab8d52d53f4')")
+// var b = wfd.returnVal;
+// var q = bauoe;
